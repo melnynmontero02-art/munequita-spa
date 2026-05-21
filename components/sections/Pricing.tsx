@@ -93,14 +93,23 @@ function EnrollModal({
     ].filter(Boolean).join("\n");
   }
 
+  function openLink(url: string, blank = true) {
+    const a = document.createElement("a");
+    a.href = url;
+    if (blank) { a.target = "_blank"; a.rel = "noopener noreferrer"; }
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
   function sendWA() {
-    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildMsg())}`, "_blank", "noopener,noreferrer");
+    openLink(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildMsg())}`);
     setSent("wa");
   }
 
   function sendEmail() {
     const subject = encodeURIComponent(`Inscripción Plan ${plan.name} — ${name}`);
-    window.open(`mailto:${SPA_EMAIL}?subject=${subject}&body=${encodeURIComponent(buildMsg())}`, "_self");
+    openLink(`mailto:${SPA_EMAIL}?subject=${subject}&body=${encodeURIComponent(buildMsg())}`, false);
     setSent("email");
   }
 

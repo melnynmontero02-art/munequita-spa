@@ -121,11 +121,20 @@ export default function Contact() {
     };
   }
 
+  function openLink(url: string, blank = true) {
+    const a = document.createElement("a");
+    a.href = url;
+    if (blank) { a.target = "_blank"; a.rel = "noopener noreferrer"; }
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
   function handleWhatsApp() {
     const fields = getFields();
     if (!fields) return;
     const text = encodeURIComponent(buildMessage(fields));
-    window.open(`https://wa.me/${WA_NUMBER}?text=${text}`, "_blank", "noopener,noreferrer");
+    openLink(`https://wa.me/${WA_NUMBER}?text=${text}`);
     setSent("wa");
   }
 
@@ -134,7 +143,7 @@ export default function Contact() {
     if (!fields) return;
     const subject = encodeURIComponent(`Solicitud de cita — ${fields.service || "Muñequita Spa"} — ${fields.name}`);
     const body    = encodeURIComponent(buildMessage(fields));
-    window.open(`mailto:${SPA_EMAIL}?subject=${subject}&body=${body}`, "_self");
+    openLink(`mailto:${SPA_EMAIL}?subject=${subject}&body=${body}`, false);
     setSent("email");
   }
 
