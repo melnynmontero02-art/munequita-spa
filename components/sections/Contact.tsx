@@ -39,7 +39,6 @@ function buildMessage(fields: Record<string, string>): string {
     fields.service ? `Servicio: ${fields.service}` : null,
     `Fecha preferida: ${fields.date}`,
     fields.time ? `Hora preferida: ${fields.time}` : null,
-    fields.message ? `Comentarios: ${fields.message}` : null,
   ].filter(Boolean).join("\n");
 }
 
@@ -134,7 +133,6 @@ export default function Contact() {
       service: (fd.get("service") as string)?.trim() ?? "",
       date:    format(apptDate, "d 'de' MMMM yyyy", { locale: es }),
       time:    selectedTime,
-      message: (fd.get("message") as string)?.trim() ?? "",
     };
   }
 
@@ -277,12 +275,6 @@ export default function Contact() {
                       Selecciona una hora para continuar
                     </p>
                   )}
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-charcoal/40 text-[10px] font-sans tracking-widest uppercase">Mensaje</label>
-                    <textarea name="message" rows={3} placeholder="Solicitudes especiales o comentarios…"
-                      className="bg-black/[0.03] border border-black/08 rounded-xl px-4 py-3 text-charcoal/70 font-sans text-sm placeholder:text-muted/50 focus:outline-none focus:border-rose/30 focus:bg-black/05 transition-all resize-none" />
-                  </div>
 
                   {/* CTA buttons */}
                   <div className="mt-2 flex flex-col sm:flex-row gap-3">
