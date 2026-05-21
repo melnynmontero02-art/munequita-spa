@@ -157,7 +157,7 @@ function ServiceModal({ service, onClose, onBook }: { service: ServiceItem; onCl
             {/* Subscription + duration */}
             <div className="flex items-center gap-4">
               <div>
-                <span className="text-charcoal/30 font-sans text-[9px] tracking-[0.25em] uppercase block mb-0.5">Suscripción mensual</span>
+                <span className="text-charcoal/30 font-sans text-[9px] tracking-[0.25em] uppercase block mb-0.5">Planes</span>
                 <span className="gradient-text font-display font-medium text-3xl">
                   {service.price}<span className="text-charcoal/30 font-sans text-sm font-normal ml-1">/ mes</span>
                 </span>
@@ -311,7 +311,7 @@ export default function Services() {
                     {s.title}
                   </h3>
                   <div className="mb-5">
-                    <span className="text-charcoal/30 font-sans text-[9px] tracking-[0.25em] uppercase block mb-1 transition-colors duration-300 group-hover:text-charcoal/45">Suscripción mensual</span>
+                    <span className="text-charcoal/30 font-sans text-[9px] tracking-[0.25em] uppercase block mb-1 transition-colors duration-300 group-hover:text-charcoal/45">Planes</span>
                     <p className="gradient-text font-display font-medium text-3xl md:text-4xl leading-none transition-transform duration-300 group-hover:-translate-y-0.5">
                       {s.price}<span className="text-charcoal/30 font-sans text-sm font-normal ml-1">/ mes</span>
                     </p>
