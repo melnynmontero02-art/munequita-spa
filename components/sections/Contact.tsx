@@ -81,27 +81,27 @@ export default function Contact() {
         });
       }
 
-      // Info column slides from left — Salvato contato_main effect
-      const infoCol = sectionRef.current.querySelector<HTMLElement>(".contact-info");
-      if (infoCol) {
-        gsap.from(infoCol, {
+      // Form slides from left
+      const formCol = sectionRef.current.querySelector<HTMLElement>(".contact-form");
+      if (formCol) {
+        gsap.from(formCol, {
           x: "-60vw",
           opacity: 0,
           duration: 1.4,
           ease: "power2.out",
-          scrollTrigger: { trigger: infoCol, start: "top 80%" },
+          scrollTrigger: { trigger: formCol, start: "top 80%" },
         });
       }
 
-      // Form slides from right
-      const formCol = sectionRef.current.querySelector<HTMLElement>(".contact-form");
-      if (formCol) {
-        gsap.from(formCol, {
+      // Info column slides from right
+      const infoCol = sectionRef.current.querySelector<HTMLElement>(".contact-info");
+      if (infoCol) {
+        gsap.from(infoCol, {
           x: "60vw",
           opacity: 0,
           duration: 1.4,
           ease: "power2.out",
-          scrollTrigger: { trigger: formCol, start: "top 80%" },
+          scrollTrigger: { trigger: infoCol, start: "top 80%" },
         });
       }
 
@@ -176,34 +176,7 @@ export default function Contact() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
-          {/* Info column */}
-          <div className="contact-info lg:col-span-2 flex flex-col gap-8">
-            <p className="text-muted font-sans text-sm leading-relaxed max-w-xs">
-              Da el primer paso hacia tu mejor versión. Nuestro equipo te confirmará la cita en menos de 24 horas con atención completamente personalizada.
-            </p>
-
-            <div className="flex flex-col gap-5">
-              {info.map(({ icon: Icon, label, value }) => (
-                <div key={label} className="flex items-start gap-4">
-                  <div className="w-9 h-9 rounded-full bg-white/05 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <Icon className="w-3.5 h-3.5 text-rose" />
-                  </div>
-                  <div>
-                    <p className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase mb-0.5">{label}</p>
-                    <p className="text-charcoal/70 font-sans text-sm">{value}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-auto pt-8 border-t border-white/06 hidden lg:block">
-              <p className="font-display font-light italic text-charcoal/40 text-lg leading-relaxed">
-                &ldquo;No vendemos tratamientos. Creamos experiencias que te hacen sentir extraordinaria.&rdquo;
-              </p>
-            </div>
-          </div>
-
-          {/* Form column */}
+          {/* Form column — left */}
           <div className="contact-form lg:col-span-3">
             <div className="bg-snow rounded-3xl p-8 md:p-10 border border-white/06 shadow-[0_8px_40px_rgba(0,0,0,0.4)] relative overflow-hidden">
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-rose/20 to-transparent" />
@@ -301,6 +274,33 @@ export default function Contact() {
                   </div>
                 </form>
               )}
+            </div>
+          </div>
+
+          {/* Info column — right */}
+          <div className="contact-info lg:col-span-2 flex flex-col gap-8">
+            <p className="text-muted font-sans text-sm leading-relaxed max-w-xs">
+              Da el primer paso hacia tu mejor versión. Nuestro equipo te confirmará la cita en menos de 24 horas con atención completamente personalizada.
+            </p>
+
+            <div className="flex flex-col gap-5">
+              {info.map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex items-start gap-4">
+                  <div className="w-9 h-9 rounded-full bg-white/05 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Icon className="w-3.5 h-3.5 text-rose" />
+                  </div>
+                  <div>
+                    <p className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase mb-0.5">{label}</p>
+                    <p className="text-charcoal/70 font-sans text-sm">{value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-auto pt-8 border-t border-white/06 hidden lg:block">
+              <p className="font-display font-light italic text-charcoal/40 text-lg leading-relaxed">
+                &ldquo;No vendemos tratamientos. Creamos experiencias que te hacen sentir extraordinaria.&rdquo;
+              </p>
             </div>
           </div>
         </div>
