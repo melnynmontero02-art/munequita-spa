@@ -7,23 +7,10 @@ import { getClient, submitPlanRequest, submitMembershipRequest, type Client } fr
 import { ArrowLeft, CheckCircle, CalendarClock, Clock } from "lucide-react";
 import Link from "next/link";
 
-const SERVICES = [
-  "Skin Glow",
-  "Collagen Booster",
-  "Armonización Facial",
-  "Volumen & Glow Labial",
-  "Botox de Precisión",
-  "Bioestimulación de Colágeno",
-  "Ritual de Limpieza Profunda",
-  "Hollywood Peel",
-  "Hidratación & Glow Intensivo",
-  "Acné, Manchas & Cicatrices",
-  "Micropigmentación Artística",
-  "Blanqueamiento Corporal",
-  "Masajes Corporales",
-  "Láser Diodo Ice",
-  "Eliminación de Tatuajes",
-  "Nutrición & Bienestar Integral",
+const PLANES = [
+  { name: "Esencia",   price: "$89 USD / mes" },
+  { name: "Ritual",    price: "$299 USD / mes" },
+  { name: "Santuario", price: "$220 USD / mes" },
 ];
 
 const STATUS_CFG = {
@@ -47,7 +34,7 @@ export default function MiPlanPage() {
   const [signupError, setSignupError] = useState<string | null>(null);
 
   // Signup form
-  const [signup, setSignup] = useState({ name: "", phone: "", email: "", plan: SERVICES[0] });
+  const [signup, setSignup] = useState({ name: "", phone: "", email: "", plan: PLANES[0].name });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -55,7 +42,7 @@ export default function MiPlanPage() {
     const screenParam = params.get("screen");
 
     if (screenParam === "signup") {
-      if (planParam && SERVICES.includes(planParam)) {
+      if (planParam && PLANES.find(p => p.name === planParam)) {
         setSignup(p => ({ ...p, plan: planParam }));
       }
       setScreen("signup");
@@ -245,10 +232,23 @@ export default function MiPlanPage() {
 
             <div className="flex flex-col gap-1.5">
               <label className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase">Plan deseado *</label>
-              <select value={signup.plan} onChange={e => setSignup(p => ({ ...p, plan: e.target.value }))}
-                className="bg-white/[0.04] border border-white/[0.08] focus:border-rose/40 rounded-xl px-4 py-2.5 text-charcoal/90 font-sans text-sm focus:outline-none transition-all">
-                {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+              <div className="flex flex-col gap-2">
+                {PLANES.map(p => (
+                  <button
+                    key={p.name}
+                    type="button"
+                    onClick={() => setSignup(prev => ({ ...prev, plan: p.name }))}
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all cursor-pointer text-left ${
+                      signup.plan === p.name
+                        ? "border-rose/50 bg-rose/10 text-charcoal/90"
+                        : "border-white/[0.08] bg-white/[0.03] text-charcoal/50 hover:border-white/20 hover:text-charcoal/80"
+                    }`}
+                  >
+                    <span className="font-sans font-medium text-sm">{p.name}</span>
+                    <span className={`font-sans text-xs ${signup.plan === p.name ? "text-rose" : "text-charcoal/30"}`}>{p.price}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex gap-3 mt-1">
@@ -422,15 +422,16 @@ export default function MiPlanPage() {
           <div className="bg-[#1a1512] border border-white/[0.08] rounded-2xl p-6 w-full max-w-sm flex flex-col gap-4">
             <p className="font-display font-light text-lg text-charcoal">Cambiar plan</p>
             <p className="text-charcoal/50 font-sans text-sm">Selecciona el plan al que deseas cambiar:</p>
-            <div className="flex flex-col gap-1.5 max-h-60 overflow-y-auto pr-1">
-              {SERVICES.filter(s => s !== client.plan).map(s => (
-                <button key={s} type="button" onClick={() => setNewPlan(s)}
-                  className={`text-left px-3 py-2.5 rounded-xl font-sans text-sm transition-all cursor-pointer ${
-                    newPlan === s
+            <div className="flex flex-col gap-2">
+              {PLANES.filter(p => p.name !== client.plan).map(p => (
+                <button key={p.name} type="button" onClick={() => setNewPlan(p.name)}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl font-sans text-sm transition-all cursor-pointer ${
+                    newPlan === p.name
                       ? "bg-rose/15 border border-rose/30 text-rose"
                       : "bg-white/[0.03] border border-transparent hover:border-white/[0.1] text-charcoal/70 hover:text-charcoal/90"
                   }`}>
-                  {s}
+                  <span>{p.name}</span>
+                  <span className="text-xs opacity-60">{p.price}</span>
                 </button>
               ))}
             </div>
