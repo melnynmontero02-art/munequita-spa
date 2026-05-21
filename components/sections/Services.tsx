@@ -253,7 +253,7 @@ export default function Services() {
     window.dispatchEvent(new CustomEvent("service:select", { detail: serviceTitle }));
     // Scroll to contact
     setTimeout(() => {
-      const lenis = (window as Record<string, unknown>).__lenis as { scrollTo: (target: string, opts: object) => void } | undefined;
+      const lenis = (window as unknown as Record<string, unknown>).__lenis as { scrollTo: (target: string, opts: object) => void } | undefined;
       if (lenis) {
         lenis.scrollTo("#contact", { offset: -80 });
       } else {
