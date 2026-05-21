@@ -5,14 +5,14 @@ import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { listenAppointments, type Appointment } from "@/lib/appointments";
 import {
-  listenClients, createClient, updateClient,
+  listenClients, createClient, updateClient, addOneMonth,
   listenPlanRequests, processPlanRequest,
   type Client, type PlanRequest,
 } from "@/lib/clients";
 import { listenAllReviews, updateReviewStatus, type Review } from "@/lib/reviews";
 import {
   Calendar, Clock, Phone, Mail, Scissors,
-  ChevronDown, Plus, Minus, Users, Bell, Copy, Check, Star, ThumbsUp, ThumbsDown,
+  ChevronDown, Plus, Users, Bell, Copy, Check, Star, ThumbsUp, ThumbsDown, CalendarClock,
 } from "lucide-react";
 
 const ADMIN_PIN = process.env.NEXT_PUBLIC_ADMIN_PIN ?? "admin123";
@@ -154,12 +154,12 @@ function AppointmentCard({ appt, onStatusChange }: { appt: Appointment; onStatus
 // ─── Client components ────────────────────────────────────────────────────────
 
 function ClientCard({ client }: { client: Client }) {
-  const [copied, setCopied]   = useState(false);
-  const [status, setStatus]   = useState(client.status);
-  const [used,   setUsed]     = useState(client.sessionsUsed);
-  const [open,   setOpen]     = useState(false);
+  const [copied,   setCopied]   = useState(false);
+  const [status,   setStatus]   = useState(client.status);
+  const [renewal,  setRenewal]  = useState(client.renewalDate);
+  const [open,     setOpen]     = useState(false);
+  const [renewing, setRenewing] = useState(false);
 
-  const pct = client.sessionsTotal > 0 ? Math.round((used / client.sessionsTotal) * 100) : 0;
   const cfg = CLIENT_STATUS[status];
 
   function copyCode() {
@@ -174,10 +174,12 @@ function ClientCard({ client }: { client: Client }) {
     await updateClient(client.code, { status: s });
   }
 
-  async function adjustSessions(delta: number) {
-    const next = Math.max(0, Math.min(client.sessionsTotal, used + delta));
-    setUsed(next);
-    await updateClient(client.code, { sessionsUsed: next });
+  async function renovar() {
+    setRenewing(true);
+    const next = addOneMonth(renewal || client.startDate);
+    setRenewal(next);
+    await updateClient(client.code, { renewalDate: next });
+    setRenewing(false);
   }
 
   return (
@@ -190,7 +192,6 @@ function ClientCard({ client }: { client: Client }) {
           <p className="text-rose font-sans text-xs mt-1">{client.plan}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          {/* Status dropdown */}
           <div className="relative">
             <button type="button" onClick={() => setOpen(!open)}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-sans font-medium cursor-pointer ${cfg.color}`}>
@@ -207,7 +208,6 @@ function ClientCard({ client }: { client: Client }) {
               </div>
             )}
           </div>
-          {/* Copy code */}
           <button type="button" onClick={copyCode}
             className="flex items-center gap-1 text-charcoal/30 hover:text-charcoal/60 font-mono text-[11px] cursor-pointer transition-colors">
             {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -216,28 +216,20 @@ function ClientCard({ client }: { client: Client }) {
         </div>
       </div>
 
-      {/* Sessions */}
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-charcoal/40 font-sans text-[11px]">Sesiones</span>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => adjustSessions(-1)} disabled={used <= 0}
-              className="w-6 h-6 rounded-full bg-white/[0.06] flex items-center justify-center text-charcoal/50 hover:text-charcoal disabled:opacity-30 cursor-pointer transition-colors">
-              <Minus className="w-3 h-3" />
-            </button>
-            <span className="text-charcoal/80 font-sans text-xs font-medium w-12 text-center">
-              {used} / {client.sessionsTotal}
-            </span>
-            <button type="button" onClick={() => adjustSessions(1)} disabled={used >= client.sessionsTotal}
-              className="w-6 h-6 rounded-full bg-white/[0.06] flex items-center justify-center text-charcoal/50 hover:text-charcoal disabled:opacity-30 cursor-pointer transition-colors">
-              <Plus className="w-3 h-3" />
-            </button>
-          </div>
+      {/* Monthly renewal */}
+      <div className="flex items-center gap-2 bg-white/[0.03] rounded-xl px-3 py-2.5">
+        <CalendarClock className="w-3.5 h-3.5 text-rose/50 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-charcoal/40 font-sans text-[10px] uppercase tracking-widest">Renovación mensual</p>
+          <p className="text-charcoal/70 font-sans text-xs mt-0.5 capitalize">
+            {renewal ? format(parseISO(renewal), "d 'de' MMMM yyyy", { locale: es }) : "—"}
+          </p>
         </div>
-        <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-rose-deep to-rose rounded-full transition-all duration-300"
-            style={{ width: `${pct}%` }} />
-        </div>
+        <button type="button" onClick={renovar} disabled={renewing}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose/10 border border-rose/20 text-rose font-sans text-[11px] cursor-pointer hover:bg-rose/20 transition-colors disabled:opacity-40 shrink-0">
+          <Plus className="w-3 h-3" />
+          {renewing ? "..." : "Renovar"}
+        </button>
       </div>
 
       <div className="pt-1 border-t border-white/[0.06] flex items-center justify-between">
@@ -253,7 +245,7 @@ function NewClientForm({ onClose }: { onClose: () => void }) {
   const today = format(new Date(), "yyyy-MM-dd");
   const [form, setForm] = useState({
     name: "", phone: "", plan: SERVICES[0],
-    sessionsTotal: "4", startDate: today, code: generateCode(),
+    startDate: today, code: generateCode(),
   });
   const [saving, setSaving] = useState(false);
 
@@ -268,10 +260,9 @@ function NewClientForm({ onClose }: { onClose: () => void }) {
       name: form.name.trim(),
       phone: form.phone.trim() || undefined,
       plan: form.plan,
-      sessionsTotal: parseInt(form.sessionsTotal) || 4,
-      sessionsUsed: 0,
       status: "pendiente",
       startDate: form.startDate,
+      renewalDate: addOneMonth(form.startDate),
     });
     setSaving(false);
     onClose();
@@ -311,13 +302,7 @@ function NewClientForm({ onClose }: { onClose: () => void }) {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase">Sesiones totales</label>
-          <input type="number" min="1" value={form.sessionsTotal} onChange={e => set("sessionsTotal", e.target.value)}
-            className="bg-white/[0.04] border border-white/[0.08] focus:border-rose/40 rounded-xl px-3 py-2 text-charcoal/90 font-sans text-sm focus:outline-none transition-all" />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
+        <div className="col-span-2 flex flex-col gap-1.5">
           <label className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase">Fecha inicio</label>
           <input type="date" value={form.startDate} onChange={e => set("startDate", e.target.value)}
             className="bg-white/[0.04] border border-white/[0.08] focus:border-rose/40 rounded-xl px-3 py-2 text-charcoal/90 font-sans text-sm focus:outline-none transition-all" />

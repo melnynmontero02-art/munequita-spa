@@ -19,15 +19,20 @@ function getDb() {
   return getDatabase(app);
 }
 
+export function addOneMonth(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  d.setMonth(d.getMonth() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 export interface Client {
   code: string;
   name: string;
   phone?: string;
   plan: string;
-  sessionsTotal: number;
-  sessionsUsed: number;
   status: "pendiente" | "activo" | "pausado" | "cancelado";
   startDate: string;
+  renewalDate: string;
   createdAt: number;
 }
 
@@ -56,6 +61,29 @@ export async function createClient(client: Omit<Client, "createdAt">): Promise<v
     const { code, ...data } = client;
     await set(ref(getDb(), `clients/${code}`), { ...data, createdAt: Date.now() });
   } catch { }
+}
+
+// Self-service: client requests a new membership from the portal
+export async function requestMembership(data: {
+  name: string;
+  phone?: string;
+  plan: string;
+  startDate: string;
+}): Promise<string> {
+  if (!isConfigured()) return "";
+  try {
+    const code = "MQ-" + String(Math.floor(1000 + Math.random() * 9000));
+    await set(ref(getDb(), `clients/${code}`), {
+      name: data.name.trim(),
+      phone: data.phone?.trim() || null,
+      plan: data.plan,
+      status: "pendiente",
+      startDate: data.startDate,
+      renewalDate: addOneMonth(data.startDate),
+      createdAt: Date.now(),
+    });
+    return code;
+  } catch { return ""; }
 }
 
 export async function updateClient(code: string, updates: Partial<Omit<Client, "code" | "createdAt">>): Promise<void> {
