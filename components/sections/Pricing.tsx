@@ -29,7 +29,7 @@ const plans = [
   {
     name: "Ritual",
     price: "$299",
-    period: "por mes",
+    period: "USD / mes",
     desc: "La membresía favorita de nuestras clientas más exclusivas. Bienestar, glow y renovación cada mes.",
     highlight: true,
     items: [
@@ -44,7 +44,7 @@ const plans = [
   {
     name: "Santuario",
     price: "$220",
-    period: "día completo",
+    period: "USD / mes",
     desc: "Un día dedicado completamente a ti. Mente, cuerpo y belleza en una experiencia de transformación total.",
     highlight: false,
     items: [
