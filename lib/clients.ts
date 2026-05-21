@@ -25,24 +25,18 @@ export function addOneMonth(dateStr: string): string {
   return d.toISOString().slice(0, 10);
 }
 
+// ─── Client ───────────────────────────────────────────────────────────────────
+
 export interface Client {
   code: string;
   name: string;
   phone?: string;
+  email?: string;
   plan: string;
   status: "pendiente" | "activo" | "pausado" | "cancelado";
+  cancellationReason?: "falta_de_pago" | "solicitud_cliente" | "otro";
   startDate: string;
   renewalDate: string;
-  createdAt: number;
-}
-
-export interface PlanRequest {
-  id?: string;
-  clientCode: string;
-  clientName: string;
-  type: "cancelar" | "cambiar";
-  newPlan?: string;
-  status: "pendiente" | "procesado";
   createdAt: number;
 }
 
@@ -63,29 +57,6 @@ export async function createClient(client: Omit<Client, "createdAt">): Promise<v
   } catch { }
 }
 
-// Self-service: client requests a new membership from the portal
-export async function requestMembership(data: {
-  name: string;
-  phone?: string;
-  plan: string;
-  startDate: string;
-}): Promise<string> {
-  if (!isConfigured()) return "";
-  try {
-    const code = "MQ-" + String(Math.floor(1000 + Math.random() * 9000));
-    await set(ref(getDb(), `clients/${code}`), {
-      name: data.name.trim(),
-      phone: data.phone?.trim() || null,
-      plan: data.plan,
-      status: "pendiente",
-      startDate: data.startDate,
-      renewalDate: addOneMonth(data.startDate),
-      createdAt: Date.now(),
-    });
-    return code;
-  } catch { return ""; }
-}
-
 export async function updateClient(code: string, updates: Partial<Omit<Client, "code" | "createdAt">>): Promise<void> {
   if (!isConfigured()) return;
   try {
@@ -95,18 +66,33 @@ export async function updateClient(code: string, updates: Partial<Omit<Client, "
 
 export function listenClients(cb: (clients: Client[]) => void): () => void {
   if (!isConfigured()) { cb([]); return () => {}; }
-  try {
-    const dbRef = ref(getDb(), "clients");
-    const handler = onValue(dbRef, (snap) => {
-      if (!snap.exists()) { cb([]); return; }
-      const list: Client[] = Object.entries(snap.val()).map(
-        ([code, data]) => ({ code, ...(data as Omit<Client, "code">) })
-      );
-      list.sort((a, b) => b.createdAt - a.createdAt);
-      cb(list);
-    });
-    return () => off(dbRef, "value", handler);
-  } catch { cb([]); return () => {}; }
+  const dbRef = ref(getDb(), "clients");
+  const unsub = onValue(dbRef, (snap) => {
+    if (!snap.exists()) { cb([]); return; }
+    const list: Client[] = Object.entries(snap.val()).map(
+      ([code, data]) => ({ code, ...(data as Omit<Client, "code">) })
+    );
+    list.sort((a, b) => b.createdAt - a.createdAt);
+    cb(list);
+  });
+  return unsub;
+}
+
+// ─── Plan requests ────────────────────────────────────────────────────────────
+// type "nueva_suscripcion" = new membership request from public form
+// type "cancelar" | "cambiar"  = change request from existing client
+
+export interface PlanRequest {
+  id?: string;
+  clientCode: string;
+  clientName: string;
+  type: "cancelar" | "cambiar" | "nueva_suscripcion";
+  newPlan?: string;
+  phone?: string;
+  email?: string;
+  status: "pendiente" | "procesado";
+  generatedCode?: string;
+  createdAt: number;
 }
 
 export async function submitPlanRequest(req: Omit<PlanRequest, "id" | "createdAt" | "status">): Promise<void> {
@@ -116,25 +102,24 @@ export async function submitPlanRequest(req: Omit<PlanRequest, "id" | "createdAt
   } catch { }
 }
 
+// Single listener — admin page derives memRequests and changeRequests from this
 export function listenPlanRequests(cb: (requests: PlanRequest[]) => void): () => void {
   if (!isConfigured()) { cb([]); return () => {}; }
-  try {
-    const dbRef = ref(getDb(), "planRequests");
-    const handler = onValue(dbRef, (snap) => {
-      if (!snap.exists()) { cb([]); return; }
-      const list: PlanRequest[] = Object.entries(snap.val()).map(
-        ([id, data]) => ({ id, ...(data as Omit<PlanRequest, "id">) })
-      );
-      list.sort((a, b) => b.createdAt - a.createdAt);
-      cb(list);
-    });
-    return () => off(dbRef, "value", handler);
-  } catch { cb([]); return () => {}; }
+  const dbRef = ref(getDb(), "planRequests");
+  const unsub = onValue(dbRef, (snap) => {
+    if (!snap.exists()) { cb([]); return; }
+    const list: PlanRequest[] = Object.entries(snap.val()).map(
+      ([id, data]) => ({ id, ...(data as Omit<PlanRequest, "id">) })
+    );
+    list.sort((a, b) => b.createdAt - a.createdAt);
+    cb(list);
+  });
+  return unsub;
 }
 
 export async function processPlanRequest(
   id: string,
-  meta: { clientCode: string; type: "cancelar" | "cambiar"; newPlan?: string }
+  meta: { clientCode: string; type: PlanRequest["type"]; newPlan?: string }
 ): Promise<void> {
   if (!isConfigured()) return;
   try {
@@ -145,4 +130,64 @@ export async function processPlanRequest(
       await update(ref(getDb(), `clients/${meta.clientCode}`), { plan: meta.newPlan });
     }
   } catch { }
+}
+
+// ─── New membership request (public form) ─────────────────────────────────────
+
+export type MembershipRequestResult =
+  | { ok: true }
+  | { ok: false; reason: "duplicate_phone" | "duplicate_email" | "error" };
+
+export async function submitMembershipRequest(data: {
+  name: string; phone?: string; email?: string; plan: string;
+}): Promise<MembershipRequestResult> {
+  if (!isConfigured()) return { ok: false, reason: "error" };
+
+  const phone = data.phone?.trim() || null;
+  const email = data.email?.trim().toLowerCase() || null;
+
+  // Duplicate check against existing clients (best-effort)
+  try {
+    const snap = await get(ref(getDb(), "clients"));
+    if (snap.exists()) {
+      const entries = Object.values(snap.val()) as Client[];
+      if (phone && entries.find(c => c.phone?.trim() === phone))
+        return { ok: false, reason: "duplicate_phone" };
+      if (email && entries.find(c => c.email?.trim().toLowerCase() === email))
+        return { ok: false, reason: "duplicate_email" };
+    }
+  } catch { /* skip if read fails */ }
+
+  try {
+    const code = "MQ-" + String(Math.floor(1000 + Math.random() * 9000));
+    const today = new Date().toISOString().slice(0, 10);
+    await set(ref(getDb(), `clients/${code}`), {
+      name: data.name.trim(),
+      phone,
+      email,
+      plan: data.plan,
+      status: "pendiente",
+      startDate: today,
+      renewalDate: addOneMonth(today),
+      createdAt: Date.now(),
+    });
+    return { ok: true };
+  } catch (e) {
+    console.error("[MQ] submitMembershipRequest failed:", e);
+    return { ok: false, reason: "error" };
+  }
+}
+
+// id = the client code (MQ-XXXX) already stored in clients/
+export async function approveMembershipRequest(id: string): Promise<string> {
+  if (!isConfigured()) return "";
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    await update(ref(getDb(), `clients/${id}`), {
+      status: "activo",
+      startDate: today,
+      renewalDate: addOneMonth(today),
+    });
+    return id;
+  } catch { return ""; }
 }

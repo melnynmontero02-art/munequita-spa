@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import SubscriberWidget from "@/components/ui/SubscriberWidget";
 
 const links = [
   { label: "Servicios",            href: "#services" },
@@ -103,8 +104,11 @@ export default function Navbar() {
             ))}
           </motion.nav>
 
-          {/* Right: CTA + hamburger */}
+          {/* Right: CTA + subscriber widget + hamburger */}
           <div className="flex items-center gap-3">
+            <div className="hidden md:block">
+              <SubscriberWidget />
+            </div>
             <motion.button
               onClick={() => scrollTo("#contact")}
               initial={{ opacity: 0, x: 20 }}
@@ -143,8 +147,12 @@ export default function Navbar() {
                 {l.label}
               </button>
             ))}
+            <a href="/mi-plan"
+              className="block text-center py-2.5 rounded-xl border border-white/[0.08] text-charcoal/50 font-sans text-sm cursor-pointer hover:border-rose/30 hover:text-charcoal/80 transition-colors mt-1">
+              Ver mi membresía
+            </a>
             <button onClick={() => { scrollTo("#contact"); setOpen(false); }}
-              className="mt-2 py-3 rounded-xl bg-gradient-to-r from-rose-deep to-rose text-white text-sm font-medium text-center cursor-pointer">
+              className="py-3 rounded-xl bg-gradient-to-r from-rose-deep to-rose text-white text-sm font-medium text-center cursor-pointer">
               Reservar Cita
             </button>
           </motion.div>

@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
-import { getClient, submitPlanRequest, requestMembership, type Client } from "@/lib/clients";
-import { ArrowLeft, CheckCircle, CalendarClock, Copy, Check } from "lucide-react";
+import { getClient, submitPlanRequest, submitMembershipRequest, type Client } from "@/lib/clients";
+import { ArrowLeft, CheckCircle, CalendarClock, Clock } from "lucide-react";
 import Link from "next/link";
 
 const SERVICES = [
@@ -43,12 +43,11 @@ export default function MiPlanPage() {
   const [newPlan,   setNewPlan]   = useState("");
   const [submitted, setSubmitted] = useState<"cancelar" | "cambiar" | null>(null);
   const [saving,    setSaving]    = useState(false);
-  const [newCode,   setNewCode]   = useState("");
-  const [copied,    setCopied]    = useState(false);
+  const [signupDone,  setSignupDone]  = useState(false);
+  const [signupError, setSignupError] = useState<string | null>(null);
 
   // Signup form
-  const today = new Date().toISOString().slice(0, 10);
-  const [signup, setSignup] = useState({ name: "", phone: "", plan: SERVICES[0], startDate: today });
+  const [signup, setSignup] = useState({ name: "", phone: "", email: "", plan: SERVICES[0] });
 
   useEffect(() => {
     const saved = localStorage.getItem("mq_plan_code");
@@ -73,13 +72,20 @@ export default function MiPlanPage() {
     e.preventDefault();
     if (!signup.name || !signup.plan) return;
     setSaving(true);
-    const code = await requestMembership({ name: signup.name, phone: signup.phone || undefined, plan: signup.plan, startDate: signup.startDate });
+    setSignupError(null);
+    const result = await submitMembershipRequest({
+      name: signup.name,
+      phone: signup.phone || undefined,
+      email: signup.email || undefined,
+      plan: signup.plan,
+    });
     setSaving(false);
-    if (code) {
-      setNewCode(code);
-      localStorage.setItem("mq_plan_code", code);
-      const found = await getClient(code);
-      if (found) { setClient(found); setScreen("dashboard"); }
+    if (result.ok) {
+      setSignupDone(true);
+    } else {
+      if (result.reason === "duplicate_phone") setSignupError("Este número de teléfono ya tiene una membresía registrada.");
+      else if (result.reason === "duplicate_email") setSignupError("Este correo electrónico ya tiene una membresía registrada.");
+      else setSignupError("Error al enviar la solicitud. Verifica tu conexión e intenta nuevamente.");
     }
   }
 
@@ -102,18 +108,11 @@ export default function MiPlanPage() {
     setNewPlan("");
   }
 
-  function copyCode() {
-    navigator.clipboard.writeText(newCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
   function logout() {
     localStorage.removeItem("mq_plan_code");
     setClient(null);
     setCode("");
     setSubmitted(null);
-    setNewCode("");
     setScreen("login");
   }
 
@@ -162,6 +161,35 @@ export default function MiPlanPage() {
 
   // ── SIGNUP ────────────────────────────────────────────────────────────────
   if (screen === "signup") {
+    if (signupDone) {
+      return (
+        <div className="min-h-screen bg-[#0a0807] flex items-center justify-center px-4">
+          <div className="w-full max-w-sm text-center flex flex-col items-center gap-6">
+            <Link href="/" className="inline-block">
+              <p className="font-brand text-white text-2xl tracking-widest uppercase">
+                Muñequita<span className="text-rose"> Spa</span>
+              </p>
+            </Link>
+            <div className="bg-[#120e0c] border border-white/[0.08] rounded-2xl p-8 flex flex-col items-center gap-4 w-full">
+              <div className="w-12 h-12 rounded-full bg-orange-400/10 border border-orange-400/20 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-orange-400" />
+              </div>
+              <div>
+                <p className="text-charcoal font-sans font-semibold text-base mb-1">Solicitud recibida</p>
+                <p className="text-charcoal/50 font-sans text-sm leading-relaxed">
+                  La administradora revisará tu solicitud y te enviará tu código de acceso por WhatsApp al aprobarlo.
+                </p>
+              </div>
+              <button type="button" onClick={() => setScreen("login")}
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-deep to-rose text-white font-sans text-sm font-medium cursor-pointer hover:opacity-90 transition-opacity mt-1">
+                Ingresar con mi código
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-[#0a0807] flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm">
@@ -183,9 +211,23 @@ export default function MiPlanPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase">Teléfono</label>
-              <input value={signup.phone} onChange={e => setSignup(p => ({ ...p, phone: e.target.value }))}
+              <label className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase">Teléfono *</label>
+              <input
+                required
+                value={signup.phone}
+                onChange={e => setSignup(p => ({ ...p, phone: e.target.value }))}
                 placeholder="809-000-0000"
+                className="bg-white/[0.04] border border-white/[0.08] focus:border-rose/40 rounded-xl px-4 py-2.5 text-charcoal/90 font-sans text-sm focus:outline-none transition-all" />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase">Correo electrónico *</label>
+              <input
+                required
+                type="email"
+                value={signup.email}
+                onChange={e => setSignup(p => ({ ...p, email: e.target.value }))}
+                placeholder="tu@correo.com"
                 className="bg-white/[0.04] border border-white/[0.08] focus:border-rose/40 rounded-xl px-4 py-2.5 text-charcoal/90 font-sans text-sm focus:outline-none transition-all" />
             </div>
 
@@ -202,14 +244,17 @@ export default function MiPlanPage() {
                 className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-charcoal/50 font-sans text-sm hover:text-charcoal/80 transition-colors cursor-pointer">
                 Volver
               </button>
-              <button type="submit" disabled={saving || !signup.name}
+              <button type="submit" disabled={saving || !signup.name || !signup.phone || !signup.email}
                 className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-deep to-rose text-white font-sans font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                {saving ? "Enviando..." : "Solicitar"}
+                {saving ? "Verificando..." : "Solicitar"}
               </button>
             </div>
 
+            {signupError && (
+              <p className="text-red-400 font-sans text-xs text-center -mt-1">{signupError}</p>
+            )}
             <p className="text-charcoal/25 font-sans text-[11px] -mt-1 text-center">
-              Tu membresía quedará pendiente hasta que la administradora la confirme.
+              Recibirás tu código de acceso por WhatsApp cuando la admin apruebe tu solicitud.
             </p>
           </form>
         </div>
@@ -239,21 +284,6 @@ export default function MiPlanPage() {
             Cerrar sesión
           </button>
         </div>
-
-        {/* New member: show generated code */}
-        {newCode && (
-          <div className="bg-rose/[0.08] border border-rose/20 rounded-2xl p-4 flex flex-col gap-2">
-            <p className="text-rose font-sans text-sm font-medium">¡Membresía solicitada!</p>
-            <p className="text-charcoal/50 font-sans text-xs leading-relaxed">
-              Guarda tu código para consultar tu membresía en el futuro:
-            </p>
-            <button type="button" onClick={copyCode}
-              className="flex items-center gap-2 bg-white/[0.06] border border-white/[0.1] rounded-xl px-4 py-2.5 w-full cursor-pointer hover:border-rose/30 transition-colors">
-              <span className="font-mono text-charcoal/90 font-bold tracking-widest text-sm flex-1 text-left">{newCode}</span>
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-charcoal/40" />}
-            </button>
-          </div>
-        )}
 
         {/* Greeting */}
         <div>

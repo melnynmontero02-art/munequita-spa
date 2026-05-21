@@ -482,6 +482,18 @@ export default function Pricing() {
         </div>
       </div>
 
+      {/* Link to membership portal */}
+      <div className="text-center mt-8">
+        <p className="text-charcoal/35 font-sans text-sm mb-3">¿Ya tienes un plan activo?</p>
+        <a
+          href="/mi-plan"
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/[0.1] text-charcoal/60 hover:text-charcoal/90 hover:border-rose/30 font-sans text-sm transition-all duration-200 cursor-pointer"
+        >
+          <Crown className="w-4 h-4 text-rose/60" />
+          Ver mi membresía / Solicitar plan
+        </a>
+      </div>
+
       {/* Enrollment modal */}
       <AnimatePresence>
         {enrollingIn && (

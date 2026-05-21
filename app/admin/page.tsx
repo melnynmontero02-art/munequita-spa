@@ -6,7 +6,7 @@ import { es } from "date-fns/locale";
 import { listenAppointments, type Appointment } from "@/lib/appointments";
 import {
   listenClients, createClient, updateClient, addOneMonth,
-  listenPlanRequests, processPlanRequest,
+  listenPlanRequests, processPlanRequest, approveMembershipRequest,
   type Client, type PlanRequest,
 } from "@/lib/clients";
 import { listenAllReviews, updateReviewStatus, type Review } from "@/lib/reviews";
@@ -154,11 +154,13 @@ function AppointmentCard({ appt, onStatusChange }: { appt: Appointment; onStatus
 // ─── Client components ────────────────────────────────────────────────────────
 
 function ClientCard({ client }: { client: Client }) {
-  const [copied,   setCopied]   = useState(false);
-  const [status,   setStatus]   = useState(client.status);
-  const [renewal,  setRenewal]  = useState(client.renewalDate);
-  const [open,     setOpen]     = useState(false);
-  const [renewing, setRenewing] = useState(false);
+  const [copied,      setCopied]      = useState(false);
+  const [status,      setStatus]      = useState(client.status);
+  const [renewal,     setRenewal]     = useState(client.renewalDate);
+  const [open,        setOpen]        = useState(false);
+  const [renewing,    setRenewing]    = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelling,  setCancelling]  = useState(false);
 
   const cfg = CLIENT_STATUS[status];
 
@@ -182,13 +184,23 @@ function ClientCard({ client }: { client: Client }) {
     setRenewing(false);
   }
 
+  async function cancelarPorPago() {
+    setCancelling(true);
+    await updateClient(client.code, { status: "cancelado", cancellationReason: "falta_de_pago" });
+    setStatus("cancelado");
+    setCancelling(false);
+    setConfirmCancel(false);
+  }
+
   return (
+    <>
     <div className="bg-[#120e0c] border border-white/[0.07] rounded-2xl p-5 flex flex-col gap-4 hover:border-white/[0.12] transition-colors">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-charcoal font-sans font-semibold text-sm">{client.name}</p>
           {client.phone && <p className="text-charcoal/40 font-sans text-[11px] mt-0.5">{client.phone}</p>}
+          {client.email && <p className="text-charcoal/30 font-sans text-[11px]">{client.email}</p>}
           <p className="text-rose font-sans text-xs mt-1">{client.plan}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
@@ -225,19 +237,58 @@ function ClientCard({ client }: { client: Client }) {
             {renewal ? format(parseISO(renewal), "d 'de' MMMM yyyy", { locale: es }) : "—"}
           </p>
         </div>
-        <button type="button" onClick={renovar} disabled={renewing}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose/10 border border-rose/20 text-rose font-sans text-[11px] cursor-pointer hover:bg-rose/20 transition-colors disabled:opacity-40 shrink-0">
+        <button type="button" onClick={renovar} disabled={renewing || status === "cancelado"}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose/10 border border-rose/20 text-rose font-sans text-[11px] cursor-pointer hover:bg-rose/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0">
           <Plus className="w-3 h-3" />
           {renewing ? "..." : "Renovar"}
         </button>
       </div>
 
+      {/* Cancellation reason badge */}
+      {status === "cancelado" && client.cancellationReason === "falta_de_pago" && (
+        <div className="flex items-center gap-1.5 bg-red-400/[0.06] border border-red-400/15 rounded-xl px-3 py-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+          <p className="text-red-400/70 font-sans text-[11px]">Cancelado por falta de pago</p>
+        </div>
+      )}
+
       <div className="pt-1 border-t border-white/[0.06] flex items-center justify-between">
         <span className="text-charcoal/25 font-sans text-[10px]">
           Inicio: {format(parseISO(client.startDate), "d MMM yyyy", { locale: es })}
         </span>
+        {status === "activo" && (
+          <button type="button" onClick={() => setConfirmCancel(true)}
+            className="text-red-400/50 hover:text-red-400 font-sans text-[11px] cursor-pointer transition-colors">
+            Cancelar por pago
+          </button>
+        )}
       </div>
     </div>
+
+    {/* Confirmation modal */}
+    {confirmCancel && (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+        <div className="bg-[#1a1512] border border-red-400/20 rounded-2xl p-6 w-full max-w-sm flex flex-col gap-4">
+          <div>
+            <p className="text-charcoal font-sans font-semibold text-base">¿Cancelar suscripción?</p>
+            <p className="text-charcoal/50 font-sans text-sm mt-1 leading-relaxed">
+              Se cancelará el plan de <span className="text-charcoal/80 font-medium">{client.name}</span> por falta de pago. El cliente perderá acceso inmediatamente.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button type="button" onClick={() => setConfirmCancel(false)}
+              className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-charcoal/50 font-sans text-sm hover:text-charcoal/80 transition-colors cursor-pointer">
+              Volver
+            </button>
+            <button type="button" onClick={cancelarPorPago} disabled={cancelling}
+              className="flex-1 py-2.5 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 font-sans text-sm font-medium hover:bg-red-500/25 transition-colors cursor-pointer disabled:opacity-50">
+              {cancelling ? "Cancelando..." : "Confirmar cancelación"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -371,6 +422,44 @@ function PlanRequestCard({ req, onProcess }: { req: PlanRequest; onProcess: () =
   );
 }
 
+// ─── Membership request card ─────────────────────────────────────────────────
+
+function MembershipRequestCard({ client, onApprove }: { client: Client; onApprove: (code: string, name: string) => void }) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleApprove() {
+    setLoading(true);
+    const code = await approveMembershipRequest(client.code);
+    setLoading(false);
+    if (code) onApprove(code, client.name);
+  }
+
+  return (
+    <div className="bg-[#120e0c] border border-orange-400/20 rounded-2xl p-5 flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-charcoal font-sans font-semibold text-sm">{client.name}</p>
+          {client.phone && <p className="text-charcoal/40 font-sans text-[11px] mt-0.5">{client.phone}</p>}
+          {client.email && <p className="text-charcoal/30 font-sans text-[11px]">{client.email}</p>}
+          <p className="text-rose font-sans text-xs mt-1">{client.plan}</p>
+        </div>
+        <span className="px-2.5 py-1 rounded-full border text-[11px] font-sans font-medium shrink-0 text-orange-400 bg-orange-400/10 border-orange-400/20">
+          Nueva suscripción
+        </span>
+      </div>
+      <div className="flex items-center justify-between pt-1 border-t border-white/[0.06]">
+        <span className="text-charcoal/25 font-sans text-[10px]">
+          {format(new Date(client.createdAt), "d MMM · HH:mm", { locale: es })}
+        </span>
+        <button type="button" onClick={handleApprove} disabled={loading}
+          className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-rose-deep to-rose text-white font-sans text-[11px] font-medium cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50">
+          {loading ? "..." : "Aprobar"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Review card ─────────────────────────────────────────────────────────────
 
 function ReviewCard({ review }: { review: Review }) {
@@ -451,6 +540,8 @@ export default function AdminPage() {
   const [reviews,      setReviews]      = useState<Review[]>([]);
   const [showForm,     setShowForm]     = useState(false);
   const [reqTick,      setReqTick]      = useState(0);
+  const [approvedCode, setApprovedCode] = useState<{ code: string; name: string } | null>(null);
+  const [codeCopied,   setCodeCopied]   = useState(false);
 
   useEffect(() => {
     if (sessionStorage.getItem("mq_admin") === "1") setAuthed(true);
@@ -489,7 +580,10 @@ export default function AdminPage() {
     pausados: clients.filter(c => c.status !== "activo").length,
   };
 
-  const pendingReqs = requests.filter(r => r.status === "pendiente").length;
+  const memRequests    = clients.filter(c => c.status === "pendiente");
+  const activeClients  = clients.filter(c => c.status !== "pendiente");
+  const changeRequests = requests.filter(r => r.type !== "nueva_suscripcion");
+  const pendingReqs    = memRequests.length + changeRequests.filter(r => r.status === "pendiente").length;
 
   return (
     <div className="min-h-screen bg-[#0a0807]">
@@ -597,14 +691,14 @@ export default function AdminPage() {
 
             {showForm && <NewClientForm onClose={() => setShowForm(false)} />}
 
-            {clients.length === 0 ? (
+            {activeClients.length === 0 ? (
               <div className="text-center py-16">
                 <Users className="w-8 h-8 text-charcoal/20 mx-auto mb-3" />
                 <p className="text-charcoal/30 font-sans text-sm">No hay clientes registrados</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {clients.map(c => <ClientCard key={c.code} client={c} />)}
+                {activeClients.map(c => <ClientCard key={c.code} client={c} />)}
               </div>
             )}
           </>
@@ -613,16 +707,37 @@ export default function AdminPage() {
         {/* ── SOLICITUDES tab ── */}
         {tab === "solicitudes" && (
           <>
-            {requests.length === 0 ? (
+            {memRequests.length === 0 && changeRequests.length === 0 ? (
               <div className="text-center py-16">
                 <Bell className="w-8 h-8 text-charcoal/20 mx-auto mb-3" />
                 <p className="text-charcoal/30 font-sans text-sm">No hay solicitudes</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {requests.map(r => (
-                  <PlanRequestCard key={r.id} req={r} onProcess={() => setReqTick(t => t + 1)} />
-                ))}
+              <div className="flex flex-col gap-6">
+                {memRequests.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase">Nuevas suscripciones</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {memRequests.map(c => (
+                        <MembershipRequestCard
+                          key={c.code}
+                          client={c}
+                          onApprove={(code, name) => setApprovedCode({ code, name })}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {changeRequests.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase">Cambios de plan</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {changeRequests.map(r => (
+                        <PlanRequestCard key={r.id} req={r} onProcess={() => setReqTick(t => t + 1)} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </>
@@ -660,6 +775,46 @@ export default function AdminPage() {
         )}
 
       </div>
+
+      {/* Code reveal modal */}
+      {approvedCode && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-[#1a1512] border border-emerald-400/20 rounded-2xl p-7 w-full max-w-sm flex flex-col items-center gap-5 shadow-2xl">
+            <div className="w-14 h-14 rounded-full bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center">
+              <Check className="w-6 h-6 text-emerald-400" />
+            </div>
+            <div className="text-center">
+              <p className="text-charcoal font-sans font-semibold text-base mb-1">¡Suscripción aprobada!</p>
+              <p className="text-charcoal/50 font-sans text-sm leading-relaxed">
+                Envía este código a <span className="text-charcoal/80">{approvedCode.name}</span> por WhatsApp para que active su acceso VIP.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(approvedCode.code);
+                setCodeCopied(true);
+                setTimeout(() => setCodeCopied(false), 2000);
+              }}
+              className="flex items-center justify-between gap-3 bg-white/[0.06] border border-white/[0.12] hover:border-emerald-400/30 rounded-xl px-5 py-3.5 w-full cursor-pointer transition-colors group"
+            >
+              <span className="font-mono text-emerald-400 font-bold tracking-[0.25em] text-lg">{approvedCode.code}</span>
+              {codeCopied
+                ? <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                : <Copy className="w-4 h-4 text-charcoal/40 group-hover:text-charcoal/70 shrink-0 transition-colors" />
+              }
+            </button>
+            <p className="text-charcoal/25 font-sans text-[11px] -mt-2">Toca para copiar el código</p>
+            <button
+              type="button"
+              onClick={() => { setApprovedCode(null); setCodeCopied(false); }}
+              className="w-full py-2.5 rounded-xl border border-white/[0.08] text-charcoal/50 hover:text-charcoal/80 font-sans text-sm transition-colors cursor-pointer"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
