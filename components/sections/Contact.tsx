@@ -2,16 +2,17 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Mail, Phone, MapPin, Clock } from "lucide-react";
+import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { GlassCalendar } from "@/components/ui/glass-calendar";
 import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { loadGsap } from "@/lib/gsap";
 import { splitWords } from "@/lib/split-words";
 
 const info = [
   { icon: MapPin,  label: "Dirección",       value: "Calle Oeste 10, Sector Vista Hermosa, Santo Domingo Este" },
   { icon: Phone,   label: "Reservas",   value: "+1 809-627-0658" },
-  { icon: Mail,    label: "Email",          value: "hello@munequitaspa.com" },
+  { icon: Mail,    label: "Email",          value: "munequita.spa01@gmail.com" },
   { icon: Clock,   label: "Horarios",          value: "Lun – Vie: 9AM–8PM · Sáb–Dom: 10AM–5PM" },
 ];
 
@@ -23,9 +24,24 @@ const services = [
   "Nutrición & Bienestar", "Otro",
 ];
 
+const WA_NUMBER = "18096270658";
+const SPA_EMAIL = "munequita.spa01@gmail.com";
+
+function buildMessage(fields: Record<string, string>): string {
+  return [
+    "Hola! Me gustaría agendar una cita en Muñequita Spa:",
+    "",
+    `Nombre: ${fields.name}`,
+    fields.phone ? `Teléfono: ${fields.phone}` : null,
+    fields.email ? `Correo: ${fields.email}` : null,
+    fields.service ? `Servicio: ${fields.service}` : null,
+    `Fecha preferida: ${fields.date}`,
+    fields.message ? `Comentarios: ${fields.message}` : null,
+  ].filter(Boolean).join("\n");
+}
+
 export default function Contact() {
-  const [sent, setSent]         = useState(false);
-  const [busy, setBusy]         = useState(false);
+  const [sent, setSent]         = useState<"wa" | "email" | null>(null);
   const [apptDate, setApptDate] = useState<Date>(new Date());
   const formRef                 = useRef<HTMLFormElement>(null);
   const sectionRef              = useRef<HTMLElement>(null);
@@ -90,13 +106,37 @@ export default function Contact() {
     init();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    await new Promise(r => setTimeout(r, 1400));
-    setBusy(false);
-    setSent(true);
-  };
+  function getFields(): Record<string, string> | null {
+    if (!formRef.current) return null;
+    const fd = new FormData(formRef.current);
+    const name = (fd.get("name") as string)?.trim();
+    if (!name) { formRef.current.querySelector<HTMLInputElement>('[name="name"]')?.focus(); return null; }
+    return {
+      name,
+      phone:   (fd.get("phone")   as string)?.trim() ?? "",
+      email:   (fd.get("email")   as string)?.trim() ?? "",
+      service: (fd.get("service") as string)?.trim() ?? "",
+      date:    format(apptDate, "d 'de' MMMM yyyy", { locale: es }),
+      message: (fd.get("message") as string)?.trim() ?? "",
+    };
+  }
+
+  function handleWhatsApp() {
+    const fields = getFields();
+    if (!fields) return;
+    const text = encodeURIComponent(buildMessage(fields));
+    window.open(`https://wa.me/${WA_NUMBER}?text=${text}`, "_blank", "noopener,noreferrer");
+    setSent("wa");
+  }
+
+  function handleEmail() {
+    const fields = getFields();
+    if (!fields) return;
+    const subject = encodeURIComponent(`Solicitud de cita — ${fields.service || "Muñequita Spa"} — ${fields.name}`);
+    const body    = encodeURIComponent(buildMessage(fields));
+    window.open(`mailto:${SPA_EMAIL}?subject=${subject}&body=${body}`, "_self");
+    setSent("email");
+  }
 
   return (
     <section id="contact" ref={sectionRef} className="relative py-20 md:py-28 bg-skin overflow-hidden">
@@ -162,11 +202,19 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-display font-light text-2xl text-charcoal mb-2">¡Tu ritual está en camino!</h3>
-                    <p className="text-muted font-sans text-sm">Nos comunicaremos contigo en menos de 24 horas para confirmar todos los detalles de tu experiencia.</p>
+                    <p className="text-muted font-sans text-sm">
+                      {sent === "wa"
+                        ? "Tu WhatsApp se abrió con los detalles. Envía el mensaje y te confirmamos en breve."
+                        : "Tu correo se abrió con los detalles. Envíalo y te confirmamos en menos de 24 horas."}
+                    </p>
+                    <button onClick={() => setSent(null)}
+                      className="mt-5 text-rose/60 hover:text-rose font-sans text-xs underline underline-offset-4 transition-colors cursor-pointer">
+                      Agendar otra cita
+                    </button>
                   </div>
                 </motion.div>
               ) : (
-                <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-5 relative z-10">
+                <form ref={formRef} className="flex flex-col gap-5 relative z-10">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <Field label="Nombre Completo" type="text"  name="name"  placeholder="Tu nombre" required />
                     <Field label="Correo"           type="email" name="email" placeholder="tucorreo@email.com" required />
@@ -204,15 +252,24 @@ export default function Contact() {
                       className="bg-black/[0.03] border border-black/08 rounded-xl px-4 py-3 text-charcoal/70 font-sans text-sm placeholder:text-muted/50 focus:outline-none focus:border-rose/30 focus:bg-black/05 transition-all resize-none" />
                   </div>
 
-                  <button type="submit" disabled={busy}
-                    className="mt-2 group relative overflow-hidden rounded-full bg-gradient-to-r from-rose-deep to-rose text-white font-sans font-semibold text-sm px-8 py-4 flex items-center justify-center gap-2 cursor-pointer hover:shadow-[0_8px_30px_rgba(212,97,140,0.35)] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed">
-                    <span className="relative z-10">
-                      {busy ? "Enviando…" : "Agenda mi cita ahora"}
-                    </span>
-                    {!busy && (
-                      <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
-                    )}
-                  </button>
+                  {/* CTA buttons */}
+                  <div className="mt-2 flex flex-col sm:flex-row gap-3">
+                    {/* WhatsApp */}
+                    <button type="button" onClick={handleWhatsApp}
+                      className="flex-1 group relative overflow-hidden rounded-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-sans font-semibold text-sm px-6 py-4 flex items-center justify-center gap-2.5 cursor-pointer shadow-[0_4px_20px_rgba(37,211,102,0.25)] hover:shadow-[0_6px_28px_rgba(37,211,102,0.40)] transition-all duration-300">
+                      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                      </svg>
+                      Agendar por WhatsApp
+                    </button>
+
+                    {/* Email */}
+                    <button type="button" onClick={handleEmail}
+                      className="flex-1 group rounded-full border border-rose/30 bg-rose/05 hover:bg-rose/10 text-charcoal/80 hover:text-charcoal font-sans font-semibold text-sm px-6 py-4 flex items-center justify-center gap-2.5 cursor-pointer transition-all duration-300">
+                      <Mail className="w-4 h-4 text-rose shrink-0" />
+                      Agendar por Correo
+                    </button>
+                  </div>
                 </form>
               )}
             </div>
