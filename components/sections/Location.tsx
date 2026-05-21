@@ -115,7 +115,7 @@ export default function Location() {
                   <div>
                     <p className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase mb-1">Dirección</p>
                     <p className="text-charcoal/80 font-sans text-sm leading-relaxed">
-                      Calle Oeste 10<br />Sector Vista Hermosa<br />Santo Domingo Este
+                      Calle 10W, No. 18<br />Sector Vista Hermosa, Guayubín Olivo<br />Al lado del Residencial Siena
                     </p>
                   </div>
                 </div>

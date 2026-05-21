@@ -53,8 +53,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               telephone: "+18096270658",
               address: {
                 "@type": "PostalAddress",
-                streetAddress: "Calle Oeste 10",
-                addressLocality: "Sector Vista Hermosa, Santo Domingo Este",
+                streetAddress: "Calle 10W, No. 18",
+                addressLocality: "Sector Vista Hermosa, Guayubín Olivo, Santo Domingo Este",
                 addressCountry: "DO",
               },
               geo: {

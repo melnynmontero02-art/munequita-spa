@@ -13,7 +13,7 @@ import { bookSlot } from "@/lib/slots";
 import { saveAppointment } from "@/lib/appointments";
 
 const info = [
-  { icon: MapPin,  label: "Dirección",       value: "Calle Oeste 10, Sector Vista Hermosa, Santo Domingo Este" },
+  { icon: MapPin,  label: "Dirección",       value: "Calle 10W, No. 18, Sector Vista Hermosa, Guayubín Olivo · Al lado del Residencial Siena" },
   { icon: Phone,   label: "Reservas",   value: "+1 809-627-0658" },
   { icon: Mail,    label: "Email",          value: "munequita.spa01@gmail.com" },
   { icon: Clock,   label: "Horarios",          value: "Lun – Sáb: 9AM–6PM · Domingo: Cerrado" },
