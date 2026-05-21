@@ -9,9 +9,10 @@ import {
   listenPlanRequests, processPlanRequest,
   type Client, type PlanRequest,
 } from "@/lib/clients";
+import { listenAllReviews, updateReviewStatus, type Review } from "@/lib/reviews";
 import {
   Calendar, Clock, Phone, Mail, Scissors,
-  ChevronDown, Plus, Minus, Users, Bell, Copy, Check,
+  ChevronDown, Plus, Minus, Users, Bell, Copy, Check, Star, ThumbsUp, ThumbsDown,
 } from "lucide-react";
 
 const ADMIN_PIN = process.env.NEXT_PUBLIC_ADMIN_PIN ?? "admin123";
@@ -385,16 +386,84 @@ function PlanRequestCard({ req, onProcess }: { req: PlanRequest; onProcess: () =
   );
 }
 
+// ─── Review card ─────────────────────────────────────────────────────────────
+
+function ReviewCard({ review }: { review: Review }) {
+  const [status, setStatus] = useState(review.status);
+  const [loading, setLoading] = useState(false);
+
+  async function handle(s: Review["status"]) {
+    setLoading(true);
+    await updateReviewStatus(review.id!, s);
+    setStatus(s);
+    setLoading(false);
+  }
+
+  const statusColor = status === "aprobada"
+    ? "border-emerald-400/20"
+    : status === "rechazada"
+    ? "border-red-400/10 opacity-60"
+    : "border-yellow-400/20";
+
+  return (
+    <div className={`bg-[#120e0c] border rounded-2xl p-5 flex flex-col gap-3 transition-all ${statusColor}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blush to-rose flex items-center justify-center font-display font-semibold text-white text-xs shrink-0">
+            {review.av}
+          </div>
+          <div>
+            <p className="text-charcoal font-sans font-semibold text-sm">{review.name}</p>
+            {review.role && <p className="text-charcoal/40 font-sans text-[11px]">{review.role}</p>}
+          </div>
+        </div>
+        <div className="flex gap-0.5 shrink-0">
+          {[...Array(review.rating)].map((_, i) => <Star key={i} className="w-3 h-3 fill-rose text-rose" />)}
+        </div>
+      </div>
+
+      <p className="text-charcoal/60 font-sans text-xs leading-relaxed line-clamp-4 italic">
+        &ldquo;{review.text}&rdquo;
+      </p>
+
+      <div className="flex items-center justify-between pt-1 border-t border-white/[0.06]">
+        <span className="text-charcoal/25 font-sans text-[10px]">
+          {format(new Date(review.createdAt), "d MMM · HH:mm", { locale: es })}
+        </span>
+        {status === "pendiente" && (
+          <div className="flex gap-2">
+            <button type="button" onClick={() => handle("rechazada")} disabled={loading}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-red-400/20 text-red-400/70 hover:text-red-400 font-sans text-[11px] cursor-pointer transition-colors disabled:opacity-40">
+              <ThumbsDown className="w-3 h-3" /> Rechazar
+            </button>
+            <button type="button" onClick={() => handle("aprobada")} disabled={loading}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 font-sans text-[11px] cursor-pointer hover:bg-emerald-400/20 transition-colors disabled:opacity-40">
+              <ThumbsUp className="w-3 h-3" /> Publicar
+            </button>
+          </div>
+        )}
+        {status === "aprobada" && (
+          <span className="text-emerald-400 font-sans text-[11px]">Publicada</span>
+        )}
+        {status === "rechazada" && (
+          <span className="text-red-400/60 font-sans text-[11px]">Rechazada</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main admin page ──────────────────────────────────────────────────────────
 
 export default function AdminPage() {
   const [authed,       setAuthed]       = useState(false);
-  const [tab,          setTab]          = useState<"citas" | "clientes" | "solicitudes">("citas");
+  const [tab,          setTab]          = useState<"citas" | "clientes" | "solicitudes" | "resenas">("citas");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [apptStatuses, setApptStatuses] = useState<Record<string, Appointment["status"]>>({});
   const [filter,       setFilter]       = useState<"todas" | "hoy" | "pendiente" | "confirmada">("hoy");
   const [clients,      setClients]      = useState<Client[]>([]);
   const [requests,     setRequests]     = useState<PlanRequest[]>([]);
+  const [reviews,      setReviews]      = useState<Review[]>([]);
   const [showForm,     setShowForm]     = useState(false);
   const [reqTick,      setReqTick]      = useState(0);
 
@@ -407,7 +476,8 @@ export default function AdminPage() {
     const u1 = listenAppointments(setAppointments);
     const u2 = listenClients(setClients);
     const u3 = listenPlanRequests(setRequests);
-    return () => { u1(); u2(); u3(); };
+    const u4 = listenAllReviews(setReviews);
+    return () => { u1(); u2(); u3(); u4(); };
   }, [authed]);
 
   if (!authed) return <LoginScreen onLogin={() => setAuthed(true)} />;
@@ -458,6 +528,7 @@ export default function AdminPage() {
             { key: "citas",       label: "Citas",       badge: apptCounts.pendiente },
             { key: "clientes",    label: "Clientes",    badge: 0 },
             { key: "solicitudes", label: "Solicitudes", badge: pendingReqs },
+            { key: "resenas",     label: "Reseñas",     badge: reviews.filter(r => r.status === "pendiente").length },
           ] as const).map(t => (
             <button key={t.key} type="button" onClick={() => setTab(t.key)}
               className={`relative px-5 py-3.5 font-sans text-sm transition-all cursor-pointer flex items-center gap-2 border-b-2 -mb-px ${tab === t.key ? "border-rose text-charcoal font-medium" : "border-transparent text-charcoal/40 hover:text-charcoal/70"}`}>
@@ -566,6 +637,37 @@ export default function AdminPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {requests.map(r => (
                   <PlanRequestCard key={r.id} req={r} onProcess={() => setReqTick(t => t + 1)} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── RESEÑAS tab ── */}
+        {tab === "resenas" && (
+          <>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "Total",      value: reviews.length },
+                { label: "Pendientes", value: reviews.filter(r => r.status === "pendiente").length },
+                { label: "Publicadas", value: reviews.filter(r => r.status === "aprobada").length },
+              ].map(s => (
+                <div key={s.label} className="bg-[#120e0c] border border-white/[0.07] rounded-2xl p-4 text-center">
+                  <p className="gradient-text font-display font-medium text-3xl">{s.value}</p>
+                  <p className="text-charcoal/40 font-sans text-[10px] tracking-widest uppercase mt-1">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {reviews.length === 0 ? (
+              <div className="text-center py-16">
+                <Star className="w-8 h-8 text-charcoal/20 mx-auto mb-3" />
+                <p className="text-charcoal/30 font-sans text-sm">No hay reseñas aún</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {reviews.map(r => (
+                  <ReviewCard key={r.id} review={r} />
                 ))}
               </div>
             )}
