@@ -15,12 +15,25 @@ const links = [
 ];
 
 function scrollTo(href: string) {
-  const lenis = (window as unknown as Record<string, { scrollTo: (t: string, o?: object) => void }>).__lenis;
-  if (lenis) {
-    lenis.scrollTo(href, { offset: -80 });
-  } else {
-    document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+  const doScroll = () => {
+    const lenis = (window as unknown as Record<string, { scrollTo: (t: string, o?: object) => void }>).__lenis;
+    if (lenis) {
+      lenis.scrollTo(href, { offset: -80 });
+    } else {
+      const el = document.querySelector(href) as HTMLElement | null;
+      if (el) window.scrollTo({ top: el.offsetTop - 80, behavior: "smooth" });
+    }
+  };
+
+  // If Lenis is already running, scroll immediately
+  if ((window as unknown as Record<string, unknown>).__lenis) {
+    doScroll();
+    return;
   }
+
+  // Hero is still in control — skip its animation, then scroll once Lenis starts
+  window.dispatchEvent(new Event("hero:skip"));
+  window.addEventListener("lenis:start", () => setTimeout(doScroll, 150), { once: true });
 }
 
 export default function Navbar() {

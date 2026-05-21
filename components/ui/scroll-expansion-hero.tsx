@@ -53,6 +53,17 @@ const ScrollExpandMedia = ({
     return () => { window.dispatchEvent(new Event('lenis:start')); };
   }, []);
 
+  // Allow navbar links to skip the hero animation entirely
+  useEffect(() => {
+    const skip = () => {
+      setScrollProgress(1);
+      setShowContent(true);
+      setMediaFullyExpanded(true);
+    };
+    window.addEventListener('hero:skip', skip);
+    return () => window.removeEventListener('hero:skip', skip);
+  }, []);
+
   useEffect(() => {
     setScrollProgress(0);
     setShowContent(false);
