@@ -17,6 +17,7 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
       }
       lenisRef.current?.destroy();
       lenisRef.current = null;
+      delete (window as unknown as Record<string, unknown>).__lenis;
     };
 
     const createLenis = async () => {
@@ -40,6 +41,7 @@ export default function SmoothScrollProvider({ children }: { children: React.Rea
       });
 
       lenisRef.current = lenis as unknown as typeof lenisRef.current;
+      (window as unknown as Record<string, unknown>).__lenis = lenis;
 
       // Wire Lenis scroll → GSAP ScrollTrigger
       lenis.on("scroll", () => ScrollTrigger.update());

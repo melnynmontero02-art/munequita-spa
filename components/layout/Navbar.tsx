@@ -14,6 +14,15 @@ const links = [
   { label: "Contacto",       href: "#contact" },
 ];
 
+function scrollTo(href: string) {
+  const lenis = (window as unknown as Record<string, { scrollTo: (t: string, o?: object) => void }>).__lenis;
+  if (lenis) {
+    lenis.scrollTo(href, { offset: -80 });
+  } else {
+    document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+  }
+}
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [hidden,   setHidden]   = useState(false);
@@ -72,20 +81,20 @@ export default function Navbar() {
             className="hidden lg:flex items-center gap-1 bg-white/[0.05] border border-white/[0.08] rounded-full px-2 py-1.5 backdrop-blur-sm"
           >
             {links.map((l) => (
-              <a
+              <button
                 key={l.href}
-                href={l.href}
+                onClick={() => scrollTo(l.href)}
                 className="px-4 py-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/[0.07] text-[12px] font-sans font-medium tracking-[0.1em] uppercase transition-all duration-200 cursor-pointer whitespace-nowrap"
               >
                 {l.label}
-              </a>
+              </button>
             ))}
           </motion.nav>
 
           {/* Right: CTA + hamburger */}
           <div className="flex items-center gap-3">
-            <motion.a
-              href="#contact"
+            <motion.button
+              onClick={() => scrollTo("#contact")}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
@@ -94,7 +103,7 @@ export default function Navbar() {
               className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-deep to-rose text-white text-[13px] font-sans font-medium tracking-wide cursor-pointer shadow-[0_4px_20px_rgba(212,97,140,0.25)] shrink-0"
             >
               Reserva tu Cita
-            </motion.a>
+            </motion.button>
 
             <button
               onClick={() => setOpen(!open)}
@@ -117,15 +126,15 @@ export default function Navbar() {
             className="fixed top-[68px] inset-x-4 z-40 bg-[#1a1512] rounded-2xl p-6 flex flex-col gap-2 shadow-xl border border-white/08"
           >
             {links.map((l) => (
-              <a key={l.href} href={l.href} onClick={() => setOpen(false)}
-                className="text-white/60 hover:text-white font-sans text-base py-3 border-b border-white/06 last:border-0 cursor-pointer">
+              <button key={l.href} onClick={() => { scrollTo(l.href); setOpen(false); }}
+                className="text-white/60 hover:text-white font-sans text-base py-3 border-b border-white/06 last:border-0 cursor-pointer text-left">
                 {l.label}
-              </a>
+              </button>
             ))}
-            <a href="#contact" onClick={() => setOpen(false)}
+            <button onClick={() => { scrollTo("#contact"); setOpen(false); }}
               className="mt-2 py-3 rounded-xl bg-gradient-to-r from-rose-deep to-rose text-white text-sm font-medium text-center cursor-pointer">
               Reservar Cita
-            </a>
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
