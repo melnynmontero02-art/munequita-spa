@@ -8,7 +8,7 @@ import { splitWords } from "@/lib/split-words";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-const WA_NUMBER = "18096270658";
+const WA_LINK   = "https://wa.me/message/DEOHEUXNEQL5D1";
 const SPA_EMAIL = "munequita.spa01@gmail.com";
 
 const plans = [
@@ -95,7 +95,7 @@ function EnrollModal({
 
   function sendWA() {
     setSent("wa");
-    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildMsg())}`, "_blank");
+    window.open(`${WA_LINK}?text=${encodeURIComponent(buildMsg())}`, "_blank");
   }
 
   function sendEmail() {

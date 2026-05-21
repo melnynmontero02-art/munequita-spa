@@ -28,7 +28,7 @@ export default function FloatingSocials() {
 
       {/* WhatsApp */}
       <motion.a
-        href="https://wa.me/8096270658"
+        href="https://wa.me/message/DEOHEUXNEQL5D1"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="WhatsApp"

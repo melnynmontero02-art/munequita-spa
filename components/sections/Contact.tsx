@@ -24,7 +24,7 @@ const services = [
   "Nutrición & Bienestar", "Otro",
 ];
 
-const WA_NUMBER = "18096270658";
+const WA_LINK   = "https://wa.me/message/DEOHEUXNEQL5D1";
 const SPA_EMAIL = "munequita.spa01@gmail.com";
 
 function buildMessage(fields: Record<string, string>): string {
@@ -126,7 +126,7 @@ export default function Contact() {
     if (!fields) return;
     const text = encodeURIComponent(buildMessage(fields));
     setSent("wa");
-    window.open(`https://wa.me/${WA_NUMBER}?text=${text}`, "_blank");
+    window.open(`${WA_LINK}?text=${text}`, "_blank");
   }
 
   function handleEmail() {
