@@ -4,7 +4,7 @@ import { Instagram, Facebook, Youtube } from "lucide-react";
 
 const exploreLinks = [
   { label: "Servicios",      href: "#services" },
-  { label: "Precios",        href: "#pricing" },
+  { label: "Planes",         href: "#pricing" },
   { label: "Nuestro Equipo", href: "#team" },
   { label: "Galería",        href: "#gallery" },
   { label: "Testimonios",    href: "#testimonials" },
