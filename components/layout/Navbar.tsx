@@ -6,12 +6,11 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { label: "Servicios",      href: "#services" },
-  { label: "Precios",        href: "#pricing" },
-  { label: "Equipo",         href: "#team" },
-  { label: "Galería",        href: "#gallery" },
-  { label: "Encuéntranos",   href: "#location" },
-  { label: "Contacto",       href: "#contact" },
+  { label: "Servicios",            href: "#services" },
+  { label: "Precios",              href: "#pricing" },
+  { label: "Equipo",               href: "#team" },
+  { label: "Galería",              href: "#gallery" },
+  { label: "Ubicación y Contacto", href: "#location" },
 ];
 
 function scrollTo(href: string) {
