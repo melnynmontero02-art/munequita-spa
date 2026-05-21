@@ -44,11 +44,22 @@ function buildMessage(fields: Record<string, string>): string {
 }
 
 export default function Contact() {
-  const [sent, setSent]               = useState<"wa" | "email" | null>(null);
-  const [apptDate, setApptDate]       = useState<Date>(new Date());
+  const [sent, setSent]                 = useState<"wa" | "email" | null>(null);
+  const [apptDate, setApptDate]         = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const formRef                       = useRef<HTMLFormElement>(null);
-  const sectionRef                    = useRef<HTMLElement>(null);
+  const [selectedService, setSelectedService] = useState<string>("");
+  const formRef                         = useRef<HTMLFormElement>(null);
+  const sectionRef                      = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const title = (e as CustomEvent<string>).detail;
+      setSelectedService(title);
+      setSent(null);
+    };
+    window.addEventListener("service:select", handler);
+    return () => window.removeEventListener("service:select", handler);
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -231,7 +242,7 @@ export default function Contact() {
                     <Field label="Teléfono" type="tel" name="phone" placeholder="+1 (809) 000-0000" />
                     <div className="flex flex-col gap-1.5">
                       <label className="text-charcoal/40 text-[10px] font-sans tracking-widest uppercase">Servicio</label>
-                      <select name="service" defaultValue=""
+                      <select name="service" value={selectedService} onChange={e => setSelectedService(e.target.value)}
                         className="bg-white/[0.04] border border-white/08 rounded-xl px-4 py-3 text-charcoal/90 font-sans text-sm focus:outline-none focus:border-rose/40 focus:bg-white/06 transition-all appearance-none cursor-pointer">
                         <option value="" disabled className="bg-[#1a1512]">Selecciona un servicio</option>
                         {services.map(s => (
