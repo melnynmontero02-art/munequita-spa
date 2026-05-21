@@ -50,6 +50,18 @@ export default function MiPlanPage() {
   const [signup, setSignup] = useState({ name: "", phone: "", email: "", plan: SERVICES[0] });
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const planParam   = params.get("plan");
+    const screenParam = params.get("screen");
+
+    if (screenParam === "signup") {
+      if (planParam && SERVICES.includes(planParam)) {
+        setSignup(p => ({ ...p, plan: planParam }));
+      }
+      setScreen("signup");
+      return;
+    }
+
     const saved = localStorage.getItem("mq_plan_code");
     if (saved) loadClient(saved);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

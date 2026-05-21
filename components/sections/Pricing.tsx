@@ -466,7 +466,10 @@ export default function Pricing() {
               </div>
 
               <button
-                onClick={() => setEnrollingIn(plan)}
+                onClick={() => {
+                  if (activePlan?.plan === plan.name) return;
+                  window.location.href = `/mi-plan?plan=${encodeURIComponent(plan.name)}&screen=signup`;
+                }}
                 className={`w-full text-center rounded-full py-3.5 text-sm font-sans font-medium tracking-wide transition-all duration-300 cursor-pointer ${
                   activePlan?.plan === plan.name
                     ? "bg-rose/15 border border-rose/30 text-rose"
