@@ -74,6 +74,7 @@ export const GlassCalendar = React.forwardRef<HTMLDivElement, GlassCalendarProps
         {/* Month nav */}
         <div className="flex items-center justify-between mb-5">
           <button
+            type="button"
             onClick={prevMonth}
             className="w-8 h-8 rounded-full flex items-center justify-center text-charcoal/40 hover:text-rose hover:bg-rose/10 transition-all duration-200 cursor-pointer"
             aria-label="Mes anterior"
@@ -98,6 +99,7 @@ export const GlassCalendar = React.forwardRef<HTMLDivElement, GlassCalendarProps
           </AnimatePresence>
 
           <button
+            type="button"
             onClick={nextMonth}
             className="w-8 h-8 rounded-full flex items-center justify-center text-charcoal/40 hover:text-rose hover:bg-rose/10 transition-all duration-200 cursor-pointer"
             aria-label="Mes siguiente"
@@ -139,6 +141,7 @@ export const GlassCalendar = React.forwardRef<HTMLDivElement, GlassCalendarProps
               return (
                 <div key={format(date, "yyyy-MM-dd")} className="flex items-center justify-center py-0.5">
                   <button
+                    type="button"
                     onClick={() => !isPast && handleDateClick(date)}
                     disabled={isPast}
                     className={cn(
