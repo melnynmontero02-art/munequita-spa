@@ -26,7 +26,7 @@ const services = [
   "Nutrición & Bienestar", "Otro",
 ];
 
-const WA_LINK   = "https://wa.me/message/DEOHEUXNEQL5D1";
+const WA_LINK   = "https://wa.me/18096270658";
 const SPA_EMAIL = "munequita.spa01@gmail.com";
 
 function buildMessage(fields: Record<string, string>): string {

@@ -8,7 +8,7 @@ import { splitWords } from "@/lib/split-words";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-const WA_LINK   = "https://wa.me/message/DEOHEUXNEQL5D1";
+const WA_LINK   = "https://wa.me/18096270658";
 const SPA_EMAIL = "munequita.spa01@gmail.com";
 
 const plans = [
