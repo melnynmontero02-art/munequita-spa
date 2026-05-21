@@ -3,6 +3,13 @@ import { getDatabase, ref, get, set, onValue, off } from "firebase/database";
 
 // ─── Firebase init (only once) ───────────────────────────────────────────────
 
+function isConfigured() {
+  return !!(
+    process.env.NEXT_PUBLIC_FB_API_KEY &&
+    process.env.NEXT_PUBLIC_FB_DB_URL
+  );
+}
+
 function getDb() {
   const cfg = {
     apiKey:            process.env.NEXT_PUBLIC_FB_API_KEY,
@@ -30,6 +37,7 @@ export function slotsForDate(date: Date): string[] {
 // ─── Read booked slots once ──────────────────────────────────────────────────
 
 export async function fetchBooked(dateStr: string): Promise<Set<string>> {
+  if (!isConfigured()) return new Set();
   try {
     const snap = await get(ref(getDb(), `bookings/${dateStr}`));
     if (!snap.exists()) return new Set();
@@ -45,17 +53,30 @@ export function listenBooked(
   dateStr: string,
   cb: (booked: Set<string>) => void
 ): () => void {
-  const dbRef = ref(getDb(), `bookings/${dateStr}`);
-  const handler = onValue(dbRef, (snap) => {
-    cb(snap.exists() ? new Set(Object.keys(snap.val())) : new Set());
-  });
-  return () => off(dbRef, "value", handler);
+  if (!isConfigured()) {
+    cb(new Set());
+    return () => {};
+  }
+  try {
+    const dbRef = ref(getDb(), `bookings/${dateStr}`);
+    const handler = onValue(dbRef, (snap) => {
+      cb(snap.exists() ? new Set(Object.keys(snap.val())) : new Set());
+    });
+    return () => off(dbRef, "value", handler);
+  } catch {
+    cb(new Set());
+    return () => {};
+  }
 }
 
 // ─── Write a booked slot ─────────────────────────────────────────────────────
 
 export async function bookSlot(dateStr: string, time: string): Promise<void> {
-  // key: "09:00" → "09-00"  (Firebase keys can't contain colons)
-  const key = time.replace(":", "-");
-  await set(ref(getDb(), `bookings/${dateStr}/${key}`), true);
+  if (!isConfigured()) return;
+  try {
+    const key = time.replace(":", "-");
+    await set(ref(getDb(), `bookings/${dateStr}/${key}`), true);
+  } catch {
+    // silently ignore if Firebase not configured
+  }
 }
