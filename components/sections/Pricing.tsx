@@ -15,7 +15,7 @@ const plans = [
   {
     name: "Esencia",
     price: "$89",
-    period: "por sesión",
+    period: "USD / mes",
     desc: "Una sesión de lujo diseñada exclusivamente para ti. El primer paso hacia tu transformación.",
     highlight: false,
     items: [
