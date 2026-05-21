@@ -3,6 +3,7 @@ import "./globals.css";
 import SmoothScrollProvider from "@/components/providers/SmoothScrollProvider";
 import FloatingSocials from "@/components/ui/FloatingSocials";
 import MotionProvider from "@/components/providers/MotionProvider";
+import CrownCursor from "@/components/ui/CrownCursor";
 
 export const metadata: Metadata = {
   title: "Muñequita Spa — Medicina Estética & Bienestar | Santo Domingo Este",
@@ -75,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SmoothScrollProvider>{children}</SmoothScrollProvider>
         </MotionProvider>
         <FloatingSocials />
+        <CrownCursor />
       </body>
     </html>
   );

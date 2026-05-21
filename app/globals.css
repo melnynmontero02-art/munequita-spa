@@ -57,6 +57,11 @@ html.lenis, html.lenis body { height: auto; }
 .reveal-right { opacity: 0; transform: translateX(60px); }
 .reveal-scale { opacity: 0; transform: scale(0.88); }
 
+/* ─── Custom crown cursor (desktop only) ─── */
+@media (hover: hover) and (pointer: fine) {
+  *, *::before, *::after { cursor: none !important; }
+}
+
 /* ─── Selection ─── */
 ::selection { background: rgba(212, 97, 140, 0.30); color: #f0ebe4; }
 
