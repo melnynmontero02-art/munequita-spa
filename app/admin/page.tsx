@@ -32,6 +32,7 @@ const APPT_STATUS: Record<Appointment["status"], { label: string; color: string 
 };
 
 const CLIENT_STATUS: Record<Client["status"], { label: string; color: string }> = {
+  pendiente: { label: "Pendiente", color: "text-orange-400 bg-orange-400/10 border-orange-400/20" },
   activo:    { label: "Activo",    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" },
   pausado:   { label: "Pausado",   color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
   cancelado: { label: "Cancelado", color: "text-red-400 bg-red-400/10 border-red-400/20" },
@@ -268,7 +269,7 @@ function NewClientForm({ onClose }: { onClose: () => void }) {
       plan: form.plan,
       sessionsTotal: parseInt(form.sessionsTotal) || 4,
       sessionsUsed: 0,
-      status: "activo",
+      status: "pendiente",
       startDate: form.startDate,
     });
     setSaving(false);

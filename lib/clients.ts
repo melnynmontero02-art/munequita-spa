@@ -26,7 +26,7 @@ export interface Client {
   plan: string;
   sessionsTotal: number;
   sessionsUsed: number;
-  status: "activo" | "pausado" | "cancelado";
+  status: "pendiente" | "activo" | "pausado" | "cancelado";
   startDate: string;
   createdAt: number;
 }

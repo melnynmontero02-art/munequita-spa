@@ -27,9 +27,10 @@ const SERVICES = [
 ];
 
 const STATUS_CFG = {
-  activo:    { label: "Activo",    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30" },
-  pausado:   { label: "Pausado",   color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30" },
-  cancelado: { label: "Cancelado", color: "text-red-400 bg-red-400/10 border-red-400/30" },
+  pendiente: { label: "Pendiente de confirmación", color: "text-orange-400 bg-orange-400/10 border-orange-400/30" },
+  activo:    { label: "Activo",                    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/30" },
+  pausado:   { label: "Pausado",                   color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30" },
+  cancelado: { label: "Cancelado",                 color: "text-red-400 bg-red-400/10 border-red-400/30" },
 };
 
 export default function MiPlanPage() {
@@ -227,6 +228,16 @@ export default function MiPlanPage() {
                   : "Tu solicitud de cambio de plan fue recibida. La administradora te contactará para confirmar."}
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Pending notice */}
+        {client.status === "pendiente" && (
+          <div className="bg-orange-400/[0.07] border border-orange-400/20 rounded-2xl p-4">
+            <p className="text-orange-400 font-sans text-sm font-medium">Membresía en revisión</p>
+            <p className="text-charcoal/50 font-sans text-xs mt-0.5 leading-relaxed">
+              La administradora está revisando tu membresía. Te contactará pronto para confirmarla.
+            </p>
           </div>
         )}
 
