@@ -6,11 +6,12 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { label: "Servicios",       href: "#services" },
-  { label: "Precios",         href: "#pricing" },
-  { label: "Nuestro Equipo",  href: "#team" },
-  { label: "Galería",         href: "#gallery" },
-  { label: "Contacto",        href: "#contact" },
+  { label: "Servicios",      href: "#services" },
+  { label: "Precios",        href: "#pricing" },
+  { label: "Equipo",         href: "#team" },
+  { label: "Galería",        href: "#gallery" },
+  { label: "Encuéntranos",   href: "#location" },
+  { label: "Contacto",       href: "#contact" },
 ];
 
 export default function Navbar() {
@@ -42,13 +43,15 @@ export default function Navbar() {
             : "bg-transparent py-5"
         )}
       >
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-6">
+
+          {/* Brand */}
           <motion.a
             href="#"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="flex items-center gap-2.5 cursor-pointer"
+            className="flex items-center gap-2.5 cursor-pointer shrink-0"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -61,45 +64,50 @@ export default function Navbar() {
             </span>
           </motion.a>
 
+          {/* Nav pill — desktop */}
           <motion.nav
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="hidden md:flex items-center gap-9"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="hidden lg:flex items-center gap-1 bg-white/[0.05] border border-white/[0.08] rounded-full px-2 py-1.5 backdrop-blur-sm"
           >
             {links.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
-                className="text-white/50 hover:text-white text-[13px] font-sans font-medium tracking-[0.12em] uppercase transition-colors duration-200 cursor-pointer"
+                className="px-4 py-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/[0.07] text-[12px] font-sans font-medium tracking-[0.1em] uppercase transition-all duration-200 cursor-pointer whitespace-nowrap"
               >
                 {l.label}
               </a>
             ))}
           </motion.nav>
 
-          <motion.a
-            href="#contact"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-deep to-rose text-white text-[13px] font-sans font-medium tracking-wide cursor-pointer shadow-[0_4px_20px_rgba(212,97,140,0.25)]"
-          >
-            Reserva tu Cita
-          </motion.a>
+          {/* Right: CTA + hamburger */}
+          <div className="flex items-center gap-3">
+            <motion.a
+              href="#contact"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full bg-gradient-to-r from-rose-deep to-rose text-white text-[13px] font-sans font-medium tracking-wide cursor-pointer shadow-[0_4px_20px_rgba(212,97,140,0.25)] shrink-0"
+            >
+              Reserva tu Cita
+            </motion.a>
 
-          <button
-            onClick={() => setOpen(!open)}
-            className="md:hidden text-white/70 hover:text-white cursor-pointer"
-            aria-label="Menú"
-          >
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+            <button
+              onClick={() => setOpen(!open)}
+              className="lg:hidden text-white/70 hover:text-white cursor-pointer"
+              aria-label="Menú"
+            >
+              {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </motion.header>
 
+      {/* Mobile menu */}
       <AnimatePresence>
         {open && (
           <motion.div
