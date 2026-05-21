@@ -10,6 +10,7 @@ import { es } from "date-fns/locale";
 import { loadGsap } from "@/lib/gsap";
 import { splitWords } from "@/lib/split-words";
 import { bookSlot } from "@/lib/slots";
+import { saveAppointment } from "@/lib/appointments";
 
 const info = [
   { icon: MapPin,  label: "Dirección",       value: "Calle Oeste 10, Sector Vista Hermosa, Santo Domingo Este" },
@@ -139,7 +140,9 @@ export default function Contact() {
   function handleWhatsApp() {
     const fields = getFields();
     if (!fields) return;
-    bookSlot(format(apptDate, "yyyy-MM-dd"), fields.time).catch(() => {});
+    const dateStr = format(apptDate, "yyyy-MM-dd");
+    bookSlot(dateStr, fields.time).catch(() => {});
+    saveAppointment({ name: fields.name, email: fields.email, phone: fields.phone, service: fields.service, date: dateStr, time: fields.time, channel: "wa" });
     const text = encodeURIComponent(buildMessage(fields));
     setSent("wa");
     window.open(`${WA_LINK}?text=${text}`, "_blank");
@@ -148,7 +151,9 @@ export default function Contact() {
   function handleEmail() {
     const fields = getFields();
     if (!fields) return;
-    bookSlot(format(apptDate, "yyyy-MM-dd"), fields.time).catch(() => {});
+    const dateStr = format(apptDate, "yyyy-MM-dd");
+    bookSlot(dateStr, fields.time).catch(() => {});
+    saveAppointment({ name: fields.name, email: fields.email, phone: fields.phone, service: fields.service, date: dateStr, time: fields.time, channel: "email" });
     const subject = encodeURIComponent(`Solicitud de cita — ${fields.service || "Muñequita Spa"} — ${fields.name}`);
     const body    = encodeURIComponent(buildMessage(fields));
     setSent("email");
