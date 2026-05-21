@@ -134,23 +134,24 @@ export const GlassCalendar = React.forwardRef<HTMLDivElement, GlassCalendarProps
               if (!date) {
                 return <div key={`empty-${idx}`} />;
               }
-              const selected = isSameDay(date, selectedDate);
-              const today    = isToday(date);
-              const isPast   = date < new Date(new Date().setHours(0, 0, 0, 0));
+              const selected  = isSameDay(date, selectedDate);
+              const today     = isToday(date);
+              const isPast    = date < new Date(new Date().setHours(0, 0, 0, 0));
+              const isSunday  = date.getDay() === 0;
 
               return (
                 <div key={format(date, "yyyy-MM-dd")} className="flex items-center justify-center py-0.5">
                   <button
                     type="button"
-                    onClick={() => !isPast && handleDateClick(date)}
-                    disabled={isPast}
+                    onClick={() => !isPast && !isSunday && handleDateClick(date)}
+                    disabled={isPast || isSunday}
                     className={cn(
                       "relative w-8 h-8 rounded-full text-xs font-sans font-medium transition-all duration-200 flex items-center justify-center",
                       selected
                         ? "bg-gradient-to-br from-rose-deep to-rose text-white shadow-[0_4px_14px_rgba(212,97,140,0.4)]"
                         : today
                         ? "text-rose border border-rose/40 hover:bg-rose/10 cursor-pointer"
-                        : isPast
+                        : isPast || isSunday
                         ? "text-charcoal/20 cursor-not-allowed"
                         : "text-charcoal/70 hover:bg-rose/10 hover:text-rose cursor-pointer"
                     )}

@@ -63,8 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 longitude: -69.851000,
               },
               openingHoursSpecification: [
-                { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday"], opens: "09:00", closes: "20:00" },
-                { "@type": "OpeningHoursSpecification", dayOfWeek: ["Saturday","Sunday"], opens: "10:00", closes: "17:00" },
+                { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"], opens: "09:00", closes: "18:00" },
               ],
               sameAs: ["https://www.instagram.com/munequitaspa"],
             }),

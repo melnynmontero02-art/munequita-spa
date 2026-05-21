@@ -16,7 +16,7 @@ const info = [
   { icon: MapPin,  label: "Dirección",       value: "Calle Oeste 10, Sector Vista Hermosa, Santo Domingo Este" },
   { icon: Phone,   label: "Reservas",   value: "+1 809-627-0658" },
   { icon: Mail,    label: "Email",          value: "munequita.spa01@gmail.com" },
-  { icon: Clock,   label: "Horarios",          value: "Lun – Vie: 9AM–8PM · Sáb–Dom: 10AM–5PM" },
+  { icon: Clock,   label: "Horarios",          value: "Lun – Sáb: 9AM–6PM · Domingo: Cerrado" },
 ];
 
 const services = [

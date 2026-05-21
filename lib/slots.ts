@@ -26,12 +26,10 @@ function getDb() {
 
 // ─── Slot definitions ────────────────────────────────────────────────────────
 
-const WEEKDAY = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
-const WEEKEND = ["10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
+const OPEN_HOURS = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00"];
 
 export function slotsForDate(date: Date): string[] {
-  const d = date.getDay();
-  return d === 0 || d === 6 ? WEEKEND : WEEKDAY;
+  return date.getDay() === 0 ? [] : OPEN_HOURS; // Sunday closed
 }
 
 // ─── Read booked slots once ──────────────────────────────────────────────────
