@@ -159,8 +159,7 @@ function ServiceModal({ service, onClose, onBook }: { service: ServiceItem; onCl
               <div>
                 <span className="text-charcoal/30 font-sans text-[9px] tracking-[0.25em] uppercase block mb-0.5">Planes</span>
                 <span className="gradient-text font-display font-medium text-3xl">
-                  {service.price}<span className="text-charcoal/30 font-sans text-sm font-normal ml-1">/ mes</span>
-                </span>
+                  {service.price}                </span>
               </div>
               <div className="flex items-center gap-1.5 text-charcoal/40">
                 <Clock className="w-3.5 h-3.5" />
@@ -313,8 +312,7 @@ export default function Services() {
                   <div className="mb-5">
                     <span className="text-charcoal/30 font-sans text-[9px] tracking-[0.25em] uppercase block mb-1 transition-colors duration-300 group-hover:text-charcoal/45">Planes</span>
                     <p className="gradient-text font-display font-medium text-3xl md:text-4xl leading-none transition-transform duration-300 group-hover:-translate-y-0.5">
-                      {s.price}<span className="text-charcoal/30 font-sans text-sm font-normal ml-1">/ mes</span>
-                    </p>
+                      {s.price}                    </p>
                   </div>
                   <p className="text-charcoal/45 group-hover:text-charcoal/65 font-sans text-xs leading-relaxed mb-5 flex-1 transition-colors duration-300">
                     {s.desc}
